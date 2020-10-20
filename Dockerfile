@@ -31,6 +31,7 @@ RUN apk update \
     gd \
     opcache \
 && printf "y\n" | pecl install mongodb-1.8.0 \
+&& printf "y\n" | pecl install imagick-3.4.4 \
 && printf "y\n" | pecl install igbinary-3.1.5 \
 && printf "y\n" | pecl install redis-5.3.1 --enable-redis-igbinary \
 && docker-php-ext-configure exif \
@@ -38,6 +39,7 @@ RUN apk update \
     igbinary \
     redis \
     mongodb \
+    imagick \
     opcache \
 && apk del .build-dependencies \
 && docker-php-source delete \
