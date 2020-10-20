@@ -12,7 +12,7 @@ RUN apk update \
     curl \
     git \
     postgresql-dev \
-    imagemagick-dev \
+    imagemagick6-dev \
     libzip-dev \
     # for GD
     freetype-dev \
