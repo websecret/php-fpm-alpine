@@ -12,6 +12,7 @@ RUN apk update \
     curl \
     git \
     postgresql-dev \
+    xdg-utils \
     imagemagick6-dev \
     libzip-dev \
     # for GD
