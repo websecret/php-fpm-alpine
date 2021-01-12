@@ -31,7 +31,7 @@ RUN apk update \
     pdo_pgsql \
     gd \
     opcache \
-&& printf "y\n" | pecl install mongodb-1.8.0 \
+&& printf "y\n" | pecl install mongodb-1.9.0 \
 && printf "y\n" | pecl install igbinary-3.2.1 \
 && printf "y\n" | pecl install imagick-3.4.4 \
 && printf "y\n" | pecl install redis-5.3.2 --enable-redis-igbinary \
