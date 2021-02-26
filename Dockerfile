@@ -1,47 +1,25 @@
-FROM php:8.0.1-fpm-alpine as php
+FROM php:8.0.2-fpm-alpine as php
 
-RUN apk update \
-&& docker-php-source extract \
-&& apk add --no-cache --virtual .build-dependencies \
-    $PHPIZE_DEPS \
-    pcre-dev \
-    build-base \
-&& apk add --no-cache \
-    shadow \
-    vim \
-    curl \
-    git \
-    postgresql-dev \
-    xdg-utils \
-    imagemagick6-dev \
-    libzip-dev \
-    # for GD
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libpng-dev \
-    libwebp-dev \
-&& docker-php-ext-configure gd \
-    --with-freetype \
-    --with-jpeg \
-&& docker-php-ext-configure exif \
-&& docker-php-ext-install -j"$(getconf _NPROCESSORS_ONLN)" \
-    intl \
-    exif \
+RUN apk update && apk add --no-cache \
+        shadow \
+        vim \
+        curl \
+        wget \
+        git \
+        jpeg \
+        libwebp \
+        libzip-dev \
+        postgresql-dev
+
+RUN docker-php-ext-install \
     zip \
-    pdo_pgsql \
-    gd \
+    pdo pdo_pgsql \
     opcache \
-&& printf "y\n" | pecl install mongodb-1.9.0 \
-&& printf "y\n" | pecl install igbinary-3.2.1 \
-&& printf "y\n" | pecl install imagick-3.4.4 \
-&& printf "y\n" | pecl install redis-5.3.2 --enable-redis-igbinary \
-&& docker-php-ext-configure exif \
-&& docker-php-ext-enable \
-    igbinary \
-    redis \
-    mongodb \
-    imagick \
-    opcache \
-&& apk del .build-dependencies \
-&& docker-php-source delete \
-&& rm -rf /tmp/* /var/cache/apk/*
+    bcmath
+
+ENV PHPREDIS_VERSION 5.3.3
+
+RUN mkdir -p /usr/src/php/ext/redis \
+    && curl -L https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/redis --strip 1 \
+    && echo 'redis' >> /usr/src/php-available-exts \
+    && docker-php-ext-install redis
