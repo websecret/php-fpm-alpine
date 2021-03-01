@@ -1,4 +1,4 @@
-FROM php:8.0.1-fpm-alpine as php
+FROM php:7.4.15-fpm-alpine as php
 
 RUN apk update \
 && docker-php-source extract \
@@ -34,7 +34,7 @@ RUN apk update \
 && printf "y\n" | pecl install mongodb-1.9.0 \
 && printf "y\n" | pecl install igbinary-3.2.1 \
 && printf "y\n" | pecl install imagick-3.4.4 \
-&& printf "y\n" | pecl install redis-5.3.2 --enable-redis-igbinary \
+&& printf "y\n" | pecl install redis-5.3.3 --enable-redis-igbinary \
 && docker-php-ext-configure exif \
 && docker-php-ext-enable \
     igbinary \
