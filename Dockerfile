@@ -30,6 +30,7 @@ RUN apk update \
     zip \
     pdo_pgsql \
     gd \
+    bcmath \
     opcache \
 && printf "y\n" | pecl install mongodb-1.9.0 \
 && printf "y\n" | pecl install igbinary-3.2.1 \
