@@ -15,7 +15,8 @@ RUN docker-php-ext-install \
     zip \
     pdo pdo_pgsql \
     opcache \
-    bcmath
+    bcmath \
+    gd
 
 ENV PHPREDIS_VERSION 5.3.3
 
