@@ -1,4 +1,4 @@
-FROM php:8.0.2-fpm-alpine as php
+FROM php:8.0.5-fpm-alpine as php
 
 RUN apk update && apk add --no-cache \
         shadow \
