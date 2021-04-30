@@ -9,6 +9,7 @@ RUN apk update && apk add --no-cache \
         jpeg \
         libwebp \
         libzip-dev \
+        libpng-dev \
         postgresql-dev
 
 RUN docker-php-ext-install \
