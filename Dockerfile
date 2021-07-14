@@ -24,25 +24,21 @@ RUN apk update && apk add --no-cache \
     && \
     mkdir -p /usr/src/php/ext/redis \
     && curl -L https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/redis --strip 1 \
-    && echo 'redis' >> /usr/src/php-available-exts
-
-RUN mkdir -p /usr/src/php/ext/imagick \
+    && echo 'redis' >> /usr/src/php-available-exts \
+    && \
+    mkdir -p /usr/src/php/ext/imagick \
     && curl -L https://github.com/Imagick/imagick/archive/$IMAGICK_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/imagick --strip 1 \
-    && echo 'imagick' >> /usr/src/php-available-exts
-
-RUN docker-php-ext-install -j "$(nproc)" \
+    && echo 'imagick' >> /usr/src/php-available-exts \
+    && \
+    docker-php-ext-install -j "$(nproc)" \
     zip \
     pdo \
     pdo_pgsql \
     opcache \
     sockets \
     bcmath \
-    redis
-
-RUN docker-php-ext-install -j "$(nproc)" \ 
-    imagick
-
-RUN docker-php-ext-install -j "$(nproc)" \    
+    redis \ 
+    imagick \
     gd \
     exif \
     && \
