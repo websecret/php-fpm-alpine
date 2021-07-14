@@ -1,48 +1,51 @@
-FROM php:7.4.15-fpm-alpine as php
+FROM php:8.0.8-fpm-alpine as php
 
-RUN apk update \
-&& docker-php-source extract \
-&& apk add --no-cache --virtual .build-dependencies \
-    $PHPIZE_DEPS \
-    pcre-dev \
-    build-base \
-&& apk add --no-cache \
+ARG UID=1000
+ARG GID=1000
+ENV PHPREDIS_VERSION 5.3.4
+
+RUN apk update && apk add --no-cache \
     shadow \
     vim \
     curl \
+    wget \
     git \
-    postgresql-dev \
-    xdg-utils \
-    imagemagick6-dev \
+    jpeg \
+    libwebp \
     libzip-dev \
-    # for GD
-    freetype-dev \
-    libjpeg-turbo-dev \
     libpng-dev \
-    libwebp-dev \
-&& docker-php-ext-configure gd \
-    --with-freetype \
-    --with-jpeg \
-&& docker-php-ext-configure exif \
-&& docker-php-ext-install -j"$(getconf _NPROCESSORS_ONLN)" \
-    intl \
-    exif \
     zip \
+    unzip \
+    postgresql-dev \
+    npm \
+    && \
+    mkdir -p /usr/src/php/ext/redis \
+    && curl -L https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/redis --strip 1 \
+    && echo 'redis' >> /usr/src/php-available-exts \
+    && \
+    docker-php-ext-install -j "$(nproc)" \
+    zip \
+    pdo \
     pdo_pgsql \
-    gd \
+    opcache \
+    sockets \
     bcmath \
-    opcache \
-&& printf "y\n" | pecl install mongodb-1.9.0 \
-&& printf "y\n" | pecl install igbinary-3.2.1 \
-&& printf "y\n" | pecl install imagick-3.4.4 \
-&& printf "y\n" | pecl install redis-5.3.3 --enable-redis-igbinary \
-&& docker-php-ext-configure exif \
-&& docker-php-ext-enable \
-    igbinary \
     redis \
-    mongodb \
-    imagick \
-    opcache \
-&& apk del .build-dependencies \
-&& docker-php-source delete \
-&& rm -rf /tmp/* /var/cache/apk/*
+    gd \
+    exif \
+    && \
+    addgroup -S php && adduser -S php -G php && \
+    usermod -u $UID php && \
+    groupmod -g $GID php&& \
+    mkdir /app && \
+    chown php:php /app
+
+COPY --from=composer:2.1.3 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+COPY php.ini /usr/local/etc/php/conf.d/
+COPY php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+COPY aliases.sh /etc/profile.d/aliases.sh
+
+USER php
