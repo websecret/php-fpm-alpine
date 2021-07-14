@@ -1,4 +1,4 @@
-FROM php:8.0.8-fpm-alpine as php
+FROM php:8.0.8-fpm-alpine3.13 as php
 
 ARG UID=1000
 ARG GID=1000
