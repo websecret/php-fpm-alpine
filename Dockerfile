@@ -1,4 +1,4 @@
-FROM php:8.0.6-fpm-alpine as php
+FROM php:8.0.8-fpm-alpine as php
 
 ARG UID=1000
 ARG GID=1000
@@ -28,9 +28,11 @@ RUN apk update && apk add --no-cache \
     pdo \
     pdo_pgsql \
     opcache \
+    sockets \
     bcmath \
     redis \
     gd \
+    exif \
     && \
     addgroup -S php && adduser -S php -G php && \
     usermod -u $UID php && \
@@ -38,7 +40,7 @@ RUN apk update && apk add --no-cache \
     mkdir /app && \
     chown php:php /app
 
-COPY --from=composer:2.0.14 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.1.3 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
