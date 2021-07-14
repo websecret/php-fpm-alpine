@@ -3,6 +3,7 @@ FROM php:8.0.8-fpm-alpine as php
 ARG UID=1000
 ARG GID=1000
 ENV PHPREDIS_VERSION 5.3.4
+ENV IMAGICK_VERSION 3.5.0
 
 RUN apk update && apk add --no-cache \
     shadow \
@@ -11,6 +12,8 @@ RUN apk update && apk add --no-cache \
     wget \
     git \
     jpeg \
+    imagemagick-dev \
+    imagemagick \
     libwebp \
     libzip-dev \
     libpng-dev \
@@ -21,16 +24,25 @@ RUN apk update && apk add --no-cache \
     && \
     mkdir -p /usr/src/php/ext/redis \
     && curl -L https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/redis --strip 1 \
-    && echo 'redis' >> /usr/src/php-available-exts \
-    && \
-    docker-php-ext-install -j "$(nproc)" \
+    && echo 'redis' >> /usr/src/php-available-exts
+
+RUN mkdir -p /usr/src/php/ext/imagick \
+    && curl -L https://github.com/Imagick/imagick/archive/$IMAGICK_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/imagick --strip 1 \
+    && echo 'imagick' >> /usr/src/php-available-exts
+
+RUN docker-php-ext-install -j "$(nproc)" \
     zip \
     pdo \
     pdo_pgsql \
     opcache \
     sockets \
     bcmath \
-    redis \
+    redis
+
+RUN docker-php-ext-install -j "$(nproc)" \ 
+    imagick
+
+RUN docker-php-ext-install -j "$(nproc)" \    
     gd \
     exif \
     && \
@@ -46,6 +58,5 @@ WORKDIR /app
 
 COPY php.ini /usr/local/etc/php/conf.d/
 COPY php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
-COPY aliases.sh /etc/profile.d/aliases.sh
 
 USER php
