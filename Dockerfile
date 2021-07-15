@@ -12,6 +12,7 @@ RUN apk update && apk add --no-cache \
     wget \
     git \
     jpeg \
+    libgomp \
     imagemagick-dev \
     imagemagick \
     libwebp \
