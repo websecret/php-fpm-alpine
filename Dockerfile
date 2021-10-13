@@ -1,59 +1,68 @@
-FROM php:8.0.8-fpm-alpine3.13 as php
+FROM php:8.0.11-fpm-alpine3.14 as php
 
 ARG UID=1000
 ARG GID=1000
-ENV PHPREDIS_VERSION 5.3.4
-ENV IMAGICK_VERSION 3.5.0
+ARG PHPREDIS_VERSION=5.3.4
+ARG IMAGICK_VERSION=3.5.1
+
 
 RUN apk update && apk add --no-cache \
-    shadow \
     vim \
     curl \
-    wget \
     git \
-    jpeg \
-    libgomp \
-    imagemagick-dev \
-    imagemagick \
-    libwebp \
-    libzip-dev \
-    libpng-dev \
-    zip \
-    unzip \
+    npm
+
+RUN apk add --virtual .build-deps \
+    # pgsql deps
     postgresql-dev \
-    npm \
-    && \
-    mkdir -p /usr/src/php/ext/redis \
+
+    # imagick deps
+
+    imagemagick-dev \
+
+    # gd deps
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    libpng-dev \
+
+    # zip deps
+    libzip-dev \
+    
+    # install phpredis from github
+
+    && mkdir -p /usr/src/php/ext/redis \
     && curl -L https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/redis --strip 1 \
     && echo 'redis' >> /usr/src/php-available-exts \
-    && \
-    mkdir -p /usr/src/php/ext/imagick \
+
+    # install imagick from  github
+
+    && mkdir -p /usr/src/php/ext/imagick \
     && curl -L https://github.com/Imagick/imagick/archive/$IMAGICK_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/imagick --strip 1 \
-    && echo 'imagick' >> /usr/src/php-available-exts \
-    && \
-    docker-php-ext-install -j "$(nproc)" \
+    && echo 'imagick' >> /usr/src/php-available-exts \ 
+    
+    # install extensions
+    && docker-php-ext-install -j "$(nproc)" \
     zip \
     pdo \
     pdo_pgsql \
     opcache \
-    sockets \
     bcmath \
+    sockets \
     redis \ 
     imagick \
     gd \
     exif \
-    && \
-    addgroup -S php && adduser -S php -G php && \
-    usermod -u $UID php && \
-    groupmod -g $GID php&& \
-    mkdir /app && \
-    chown php:php /app
+    && apk del .build-deps && \
+    rm -rf /var/cache/apk/*
 
-COPY --from=composer:2.1.3 /usr/bin/composer /usr/bin/composer
+RUN addgroup -S php -g $GID && adduser -u $UID -S -G php php && \
+    mkdir /app
 
-WORKDIR /app
+COPY --from=composer:2.1.9 /usr/bin/composer /usr/bin/composer
 
 COPY php.ini /usr/local/etc/php/conf.d/
 COPY php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+
+WORKDIR /app
 
 USER php
