@@ -1,46 +1,68 @@
-FROM php:7.4.10-fpm-alpine as php
+FROM php:8.0.11-fpm-alpine3.14 as php
 
-RUN apk update \
-&& docker-php-source extract \
-&& apk add --no-cache --virtual .build-dependencies \
-    $PHPIZE_DEPS \
-    pcre-dev \
-    build-base \
-&& apk add --no-cache \
-    shadow \
+ARG UID=1000
+ARG GID=1000
+ARG PHPREDIS_VERSION=5.3.4
+ARG IMAGICK_VERSION=3.5.1
+
+
+RUN apk update && apk add --no-cache \
     vim \
     curl \
     git \
+    npm
+
+RUN apk add --virtual .build-deps \
+    # pgsql deps
     postgresql-dev \
+
+    # imagick deps
+
     imagemagick-dev \
-    libzip-dev \
-    # for GD
-    freetype-dev \
+
+    # gd deps
     libjpeg-turbo-dev \
-    libpng-dev \
     libwebp-dev \
-&& docker-php-ext-configure gd \
-    --with-freetype \
-    --with-jpeg \
-&& docker-php-ext-configure exif \
-&& docker-php-ext-install -j"$(getconf _NPROCESSORS_ONLN)" \
-    intl \
-    exif \
+    libpng-dev \
+
+    # zip deps
+    libzip-dev \
+    
+    # install phpredis from github
+
+    && mkdir -p /usr/src/php/ext/redis \
+    && curl -L https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/redis --strip 1 \
+    && echo 'redis' >> /usr/src/php-available-exts \
+
+    # install imagick from  github
+
+    && mkdir -p /usr/src/php/ext/imagick \
+    && curl -L https://github.com/Imagick/imagick/archive/$IMAGICK_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/imagick --strip 1 \
+    && echo 'imagick' >> /usr/src/php-available-exts \ 
+    
+    # install extensions
+    && docker-php-ext-install -j "$(nproc)" \
     zip \
+    pdo \
     pdo_pgsql \
-    gd \
     opcache \
-&& printf "y\n" | pecl install mongodb-1.8.0 \
-&& printf "y\n" | pecl install imagick-3.4.4 \
-&& printf "y\n" | pecl install igbinary-3.1.5 \
-&& printf "y\n" | pecl install redis-5.3.1 --enable-redis-igbinary \
-&& docker-php-ext-configure exif \
-&& docker-php-ext-enable \
-    igbinary \
-    redis \
-    mongodb \
+    bcmath \
+    sockets \
+    redis \ 
     imagick \
-    opcache \
-&& apk del .build-dependencies \
-&& docker-php-source delete \
-&& rm -rf /tmp/* /var/cache/apk/*
+    gd \
+    exif \
+    && apk del .build-deps && \
+    rm -rf /var/cache/apk/*
+
+RUN addgroup -S php -g $GID && adduser -u $UID -S -G php php && \
+    mkdir /app
+
+COPY --from=composer:2.1.9 /usr/bin/composer /usr/bin/composer
+
+COPY php.ini /usr/local/etc/php/conf.d/
+COPY php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+
+WORKDIR /app
+
+USER php
